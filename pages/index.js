@@ -9,12 +9,18 @@ const Home = ({ doors }) => {
           doors.map((door) => (
             <a
               key={door.id}
-              className="bg-green-200 p-8"
+              className="bg-gray-200 p-4"
               target="_blank"
               rel="noopener noreferrer"
               href={door.content_url}
             >
-              {door.title}
+              <img src={door.image_url} className="mb-4 max-h-32 w-full" />
+              <h2 className="font-semibold mb-2 truncate" title={door.title}>
+                {door.title}
+              </h2>
+              <p className="truncate" title={door.description}>
+                {door.description}
+              </p>
             </a>
           ))
         ) : (

@@ -1,19 +1,27 @@
+import { useState } from "react";
 import { supabaseClient } from "../utils/supabase";
 import { Input, InputNumber, Select, Button } from "@supabase/ui";
+import { useRouter } from "next/router";
 
 const Admin = ({ user, authors }) => {
+  const [imageUrl, setImageUrl] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const router = useRouter();
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     const formData = new FormData(e.target);
-    const opening_date = new Date(2021, 11, formData.get("day"));
+    const opening_date = new Date(
+      Date.UTC(2021, 11, Number(formData.get("day")))
+    ); // javascript! 🤦‍♀️
     const title = formData.get("title");
     const description = formData.get("description");
     const author_id = formData.get("author");
     const image_url = formData.get("image");
     const content_url = formData.get("content");
 
-    const { data, error } = await supabaseClient.from("doors").insert([
+    const { data } = await supabaseClient.from("doors").insert([
       {
         title,
         description,
@@ -24,26 +32,69 @@ const Admin = ({ user, authors }) => {
       },
     ]);
 
-    console.log({ data, error });
+    router.push("/");
+  };
+
+  const handleUpload = async (e) => {
+    const bucketId = "frontdoors";
+    const file = e.target.files[0];
+    const filePath = `public/${file.name}`;
+    setIsUploading(true);
+
+    const { data } = await supabaseClient.storage
+      .from(bucketId)
+      .upload(filePath, file, {
+        cacheControl: "60",
+        upsert: true,
+      });
+
+    const { publicURL } = supabaseClient.storage
+      .from(bucketId)
+      .getPublicUrl(filePath);
+
+    setImageUrl(publicURL);
+    setIsUploading(false);
   };
 
   return (
     <>
       <h1 className="my-6 text-3xl">Admin - {user.email}</h1>
       <form onSubmit={handleSubmit}>
-        <InputNumber label="Day" name="day" />
-        <Input label="Title" name="title" />
-        <Input.TextArea label="Description" name="description" />
-        <Select label="Author" name="author">
+        <InputNumber label="Day" name="day" className="mb-4" required />
+        <Input label="Title" name="title" className="mb-4" required />
+        <Input.TextArea
+          label="Description"
+          name="description"
+          className="mb-4"
+          required
+        />
+        <Select label="Author" name="author" className="mb-4" required>
           {authors.map((author) => (
             <Select.Option key={author.id} value={author.id}>
               {author.name}
             </Select.Option>
           ))}
         </Select>
-        <Input label="Image URL" name="image" />
-        <Input label="Content URL" name="content" />
-        <Button>Submit</Button>
+        <label
+          htmlFor="file"
+          className="block w-full bg-gray-200 p-8 text-center text-gray-700 my-8"
+        >
+          {!isUploading ? "Click to upload image!" : "Uploading..."}
+        </label>
+        <input
+          type="file"
+          name="file"
+          id="file"
+          onChange={handleUpload}
+          multiple={false}
+          className="hidden"
+        />
+        {imageUrl !== "" && (
+          <img src={imageUrl} className="max-w-xl mx-auto mb-4" />
+        )}
+        <input type="hidden" name="image" value={imageUrl} />
+        <Input label="Content URL" name="content" className="mb-4" required />
+        <Button disabled={isUploading}>Submit</Button>
       </form>
     </>
   );
