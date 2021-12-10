@@ -90,7 +90,7 @@ const Admin = ({ user, authors }) => {
           className="hidden"
         />
         {imageUrl !== "" && (
-          <img src={imageUrl} className="max-w-xl mx-auto mb-4" />
+          <img src={imageUrl} className="max-w-xl mx-auto mb-4 object-cover" />
         )}
         <input type="hidden" name="image" value={imageUrl} />
         <Input label="Content URL" name="content" className="mb-4" required />
@@ -103,9 +103,15 @@ const Admin = ({ user, authors }) => {
 export const getServerSideProps = async ({ req }) => {
   const { user } = await supabaseClient.auth.api.getUserByCookie(req);
 
+  console.log({ user });
+
   if (!user) {
     // If no user, redirect to index.
     return { props: {}, redirect: { destination: "/login", permanent: false } };
+  }
+
+  if (user?.app_metadata?.role !== "admin") {
+    return { props: {}, redirect: { destination: "/", permanent: false } };
   }
 
   const { data: authors } = await supabaseClient
