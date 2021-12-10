@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabaseClient } from "../utils/supabase";
 
 const DoorDetails = ({ door }) => {
-  const [likes, setLikes] = useState(door.likes);
+  const [likes, setLikes] = useState(door?.likes ?? 0);
 
   useEffect(() => {
     const subscription = supabaseClient
