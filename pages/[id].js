@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { supabaseClient } from "../utils/supabase";
 
 const DoorDetails = ({ door }) => {
-  const [likes, setLikes] = useState(door?.likes ?? 0);
+  const [likes, setLikes] = useState(door.likes);
 
   useEffect(() => {
     const subscription = supabaseClient
@@ -36,14 +36,14 @@ const DoorDetails = ({ door }) => {
 export const getStaticPaths = async () => {
   const { data: doorIds } = await supabaseClient.from("doors").select("id");
 
-  const paths = doorIds.map((id) => ({
+  const paths = doorIds.map(({ id }) => ({
     params: {
       id: id.toString(),
     },
   }));
 
   return {
-    paths: [],
+    paths,
     fallback: "blocking",
   };
 };
